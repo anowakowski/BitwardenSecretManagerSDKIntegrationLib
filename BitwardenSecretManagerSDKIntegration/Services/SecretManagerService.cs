@@ -15,6 +15,7 @@ namespace BitwardenSecretManagerSDKIntegration.Services
             {
                 _bitwardenClient = new BitwardenClient();
                 _bitwardenClient.AccessTokenLogin(accessToken);
+                _disposed = false;
 
                 return (true, "successfully autencticated on bitwarden secret manager");
             }
@@ -30,6 +31,7 @@ namespace BitwardenSecretManagerSDKIntegration.Services
 
         public SecretModel GetSecret(Guid organizationId, string secretKey, string projectName)
         {
+            if (!CheckIfUserIsAuthorizedOnBWSecretManager()) throw new InvalidOperationException("You are currentrly not authorized on bitwarden secret manager");
             if (!CheckIfProjectExists(projectName, organizationId)) throw new ArgumentException($"project {projectName} not exists");
 
             var secrets = _bitwardenClient.Secrets.List(organizationId);
@@ -53,6 +55,13 @@ namespace BitwardenSecretManagerSDKIntegration.Services
                 _disposed = true;
                 _bitwardenClient.Dispose();
             }
+        }
+
+        private bool CheckIfUserIsAuthorizedOnBWSecretManager()
+        {
+            if (_disposed || _bitwardenClient == null) return false;
+
+            return true;
         }
 
         private bool CheckIfProjectExists(string projectName, Guid organizationId)
