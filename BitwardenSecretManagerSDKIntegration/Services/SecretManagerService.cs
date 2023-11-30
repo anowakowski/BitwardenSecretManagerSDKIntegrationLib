@@ -1,5 +1,6 @@
 ﻿using Bitwarden.Sdk;
 using BitwardenSecretManagerSDKIntegration.Common.Interfaces;
+using BitwardenSecretManagerSDKIntegration.Exceptions;
 using BitwardenSecretManagerSDKIntegration.Models;
 
 namespace BitwardenSecretManagerSDKIntegration.Services
@@ -31,16 +32,16 @@ namespace BitwardenSecretManagerSDKIntegration.Services
 
         public SecretModel GetSecret(Guid organizationId, string secretKey, string projectName)
         {
-            if (!CheckIfUserIsAuthorizedOnBWSecretManager()) throw new InvalidOperationException("You are currentrly not authorized on bitwarden secret manager");
-            if (!CheckIfProjectExists(projectName, organizationId)) throw new ArgumentException($"project {projectName} not exists");
+            if (!CheckIfUserIsAuthorizedOnBWSecretManager()) throw new NotAuthorizedException("You are currentrly not authorized on bitwarden secret manager");
+            if (!CheckIfProjectExists(projectName, organizationId)) throw new ProjectNotExistsException($"project {projectName} not exists");
 
             var secrets = _bitwardenClient.Secrets.List(organizationId);
 
-            if (!secrets.Data.Any()) throw new ArgumentException($"you currently havan't any secrets on your organization: {organizationId}");
+            if (!secrets.Data.Any()) throw new SecretNotExistsException($"you currently havan't any secrets on your organization: {organizationId}");
 
             var secret = secrets.Data.FirstOrDefault(x => x.Key == secretKey);
 
-            if (secret == null) throw new ArgumentException($"your secret: {secretKey} is not exist in your organization: {organizationId}");
+            if (secret == null) throw new SecretNotExistsException($"your secret: {secretKey} is not exist in your organization: {organizationId}");
 
             var secretApikeyId = secret.Id;
             var secretResponse = _bitwardenClient.Secrets.Get(secretApikeyId);
