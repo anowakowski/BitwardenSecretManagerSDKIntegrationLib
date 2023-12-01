@@ -72,7 +72,7 @@ namespace BitwardenSecretManagerSDKIntegration.Services
 
             var foundedProject = projectList.FirstOrDefault(x => x.Name == projectName);
 
-            return foundedProject == null;
+            return foundedProject != null;
         }
     }
 }
